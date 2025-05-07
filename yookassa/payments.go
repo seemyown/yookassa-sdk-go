@@ -132,10 +132,6 @@ func (p *PaymentHandler) CreatePayment(ctx context.Context, payment *yoopayment.
 	if err != nil {
 		return nil, err
 	}
-
-	if paymentResponse.Confirmation == nil {
-		return nil, errors.New("empty confirmation url")
-	}
 	return paymentResponse, nil
 }
 
