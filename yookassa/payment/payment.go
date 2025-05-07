@@ -32,7 +32,8 @@ type Payment struct {
 	// "Payment for order No. 72 for user@yoomoney.ru".
 	Description string `json:"description,omitempty" binding:"max=128"`
 
-	SavePaymentMethod bool `json:"save_payment_method,omitempty"`
+	SavePaymentMethod bool   `json:"save_payment_method,omitempty"`
+	PaymentMethodId   string `json:"payment_method_id,omitempty"`
 
 	// Payment Recipient.
 	Recipient *Recipient `json:"recipient,omitempty"`
