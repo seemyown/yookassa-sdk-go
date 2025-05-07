@@ -2,6 +2,7 @@
 package yookassa
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -32,13 +33,14 @@ func (r RefundHandler) WithIdempotencyKey(idempotencyKey string) RefundHandler {
 }
 
 // CreateRefund creates a refund, accepts and returns the Refund entity.
-func (r *RefundHandler) CreateRefund(refund *yoorefund.Refund) (*yoorefund.Refund, error) {
+func (r *RefundHandler) CreateRefund(ctx context.Context, refund *yoorefund.Refund) (*yoorefund.Refund, error) {
 	refundJson, err := json.Marshal(refund)
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := r.client.makeRequest(
+		ctx,
 		http.MethodPost,
 		RefundEndpoint,
 		refundJson,
@@ -68,10 +70,10 @@ func (r *RefundHandler) CreateRefund(refund *yoorefund.Refund) (*yoorefund.Refun
 }
 
 // FindRefund find a refund by ID returns the Refund entity.
-func (r *RefundHandler) FindRefund(id string) (*yoorefund.Refund, error) {
+func (r *RefundHandler) FindRefund(ctx context.Context, id string) (*yoorefund.Refund, error) {
 	endpoint := fmt.Sprintf("%s/%s", RefundEndpoint, id)
 
-	resp, err := r.client.makeRequest(http.MethodGet, endpoint, nil, nil, r.idempotencyKey)
+	resp, err := r.client.makeRequest(ctx, http.MethodGet, endpoint, nil, nil, r.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +97,7 @@ func (r *RefundHandler) FindRefund(id string) (*yoorefund.Refund, error) {
 
 // FindRefunds find refunds by filter and returns the list of refunds.
 func (r *RefundHandler) FindRefunds(
+	ctx context.Context,
 	filter *yoorefund.RefundListFilter,
 ) (*yoorefund.RefundList, error) {
 	filterJson, err := json.Marshal(filter)
@@ -109,6 +112,7 @@ func (r *RefundHandler) FindRefunds(
 	}
 
 	resp, err := r.client.makeRequest(
+		ctx,
 		http.MethodGet,
 		RefundEndpoint,
 		nil,

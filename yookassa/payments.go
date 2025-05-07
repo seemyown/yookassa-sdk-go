@@ -2,6 +2,7 @@
 package yookassa
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -35,7 +36,7 @@ func (p PaymentHandler) WithIdempotencyKey(idempotencyKey string) *PaymentHandle
 }
 
 // CapturePayment confirms payment, accepts and returns the Payment entity.
-func (p *PaymentHandler) CapturePayment(payment *yoopayment.Payment) (*yoopayment.Payment, error) {
+func (p *PaymentHandler) CapturePayment(ctx context.Context, payment *yoopayment.Payment) (*yoopayment.Payment, error) {
 	paymentJson, err := json.MarshalIndent(payment, "", "\t")
 	if err != nil {
 		return nil, err
@@ -44,6 +45,7 @@ func (p *PaymentHandler) CapturePayment(payment *yoopayment.Payment) (*yoopaymen
 	captureRequest := fmt.Sprintf("%s/%s/%s", PaymentEndpoint, payment.ID, CaptureEndpoint)
 
 	resp, err := p.client.makeRequest(
+		ctx,
 		http.MethodPost,
 		captureRequest,
 		paymentJson,
@@ -72,10 +74,10 @@ func (p *PaymentHandler) CapturePayment(payment *yoopayment.Payment) (*yoopaymen
 }
 
 // CancelPayment cancel payment by ID.
-func (p *PaymentHandler) CancelPayment(paymentId string) (*yoopayment.Payment, error) {
+func (p *PaymentHandler) CancelPayment(ctx context.Context, paymentId string) (*yoopayment.Payment, error) {
 	cancelRequest := fmt.Sprintf("%s/%s/%s", PaymentEndpoint, paymentId, CancelEndpoint)
 
-	resp, err := p.client.makeRequest(http.MethodPost, cancelRequest, nil, nil, p.idempotencyKey)
+	resp, err := p.client.makeRequest(ctx, http.MethodPost, cancelRequest, nil, nil, p.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}
@@ -98,13 +100,14 @@ func (p *PaymentHandler) CancelPayment(paymentId string) (*yoopayment.Payment, e
 }
 
 // CreatePayment creates a payment, accepts and returns the Payment entity.
-func (p *PaymentHandler) CreatePayment(payment *yoopayment.Payment) (*yoopayment.Payment, error) {
+func (p *PaymentHandler) CreatePayment(ctx context.Context, payment *yoopayment.Payment) (*yoopayment.Payment, error) {
 	paymentJson, err := json.MarshalIndent(payment, "", "\t")
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := p.client.makeRequest(
+		ctx,
 		http.MethodPost,
 		PaymentEndpoint,
 		paymentJson,
@@ -137,8 +140,8 @@ func (p *PaymentHandler) CreatePayment(payment *yoopayment.Payment) (*yoopayment
 }
 
 // CreatePaymentLink creates a payment link, accepts Payment entity, returns the link.
-func (p *PaymentHandler) CreatePaymentLink(payment *yoopayment.Payment) (string, error) {
-	pay, err := p.CreatePayment(payment)
+func (p *PaymentHandler) CreatePaymentLink(ctx context.Context, payment *yoopayment.Payment) (string, error) {
+	pay, err := p.CreatePayment(ctx, payment)
 	if err != nil {
 		return "", err
 	}
@@ -147,10 +150,10 @@ func (p *PaymentHandler) CreatePaymentLink(payment *yoopayment.Payment) (string,
 }
 
 // FindPayment find a payment by ID returns the Payment entity.
-func (p *PaymentHandler) FindPayment(id string) (*yoopayment.Payment, error) {
+func (p *PaymentHandler) FindPayment(ctx context.Context, id string) (*yoopayment.Payment, error) {
 	endpoint := fmt.Sprintf("%s/%s", PaymentEndpoint, id)
 
-	resp, err := p.client.makeRequest(http.MethodGet, endpoint, nil, nil, p.idempotencyKey)
+	resp, err := p.client.makeRequest(ctx, http.MethodGet, endpoint, nil, nil, p.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +177,7 @@ func (p *PaymentHandler) FindPayment(id string) (*yoopayment.Payment, error) {
 
 // FindPayments find payments by filter and returns the list of payments.
 func (p *PaymentHandler) FindPayments(
+	ctx context.Context,
 	filter *yoopayment.PaymentListFilter,
 ) (*yoopayment.PaymentList, error) {
 	filterJson, err := json.Marshal(filter)
@@ -188,6 +192,7 @@ func (p *PaymentHandler) FindPayments(
 	}
 
 	resp, err := p.client.makeRequest(
+		ctx,
 		http.MethodGet,
 		PaymentEndpoint,
 		nil,

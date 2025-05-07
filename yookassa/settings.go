@@ -2,6 +2,7 @@
 package yookassa
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -31,13 +32,13 @@ func (r SettingsHandler) WithIdempotencyKey(idempotencyKey string) SettingsHandl
 }
 
 // GetAccountSettings gets the client account settings.
-func (s *SettingsHandler) GetAccountSettings(OnBehalfOf *string) (*yoosettings.Settings, error) {
+func (s *SettingsHandler) GetAccountSettings(ctx context.Context, OnBehalfOf *string) (*yoosettings.Settings, error) {
 	var params map[string]interface{}
 	if OnBehalfOf != nil {
 		params = map[string]interface{}{"on_behalf_of": *OnBehalfOf}
 	}
 
-	resp, err := s.client.makeRequest(http.MethodGet, MeEndpoint, nil, params, s.idempotencyKey)
+	resp, err := s.client.makeRequest(ctx, http.MethodGet, MeEndpoint, nil, params, s.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}

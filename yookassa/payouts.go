@@ -1,6 +1,7 @@
 package yookassa
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 
@@ -29,8 +30,8 @@ func (p PayoutHandler) WithIdempotencyKey(idempotencyKey string) *PayoutHandler 
 	return &p
 }
 
-func (p *PayoutHandler) GetSbpBanks() ([]yoopayout.SbpBank, error) {
-	resp, err := p.client.makeRequest("GET", SbpBanksEndpoint, nil, nil, p.idempotencyKey)
+func (p *PayoutHandler) GetSbpBanks(ctx context.Context) ([]yoopayout.SbpBank, error) {
+	resp, err := p.client.makeRequest(ctx, "GET", SbpBanksEndpoint, nil, nil, p.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func (p *PayoutHandler) GetSbpBanks() ([]yoopayout.SbpBank, error) {
 }
 
 // TODO: support other payout types
-func (p *PayoutHandler) CreatePayout(payout *yoopayout.Payout) (*yoopayout.Payout, error) {
+func (p *PayoutHandler) CreatePayout(ctx context.Context, payout *yoopayout.Payout) (*yoopayout.Payout, error) {
 	if payout.PayoutDestinationData.Type != yoopayout.PayoutTypeSBP {
 		return nil, errors.New("unsupported payout type")
 	}
@@ -65,7 +66,7 @@ func (p *PayoutHandler) CreatePayout(payout *yoopayout.Payout) (*yoopayout.Payou
 		return nil, err
 	}
 
-	resp, err := p.client.makeRequest("POST", PayoutsEndpoint, payoutJson, nil, p.idempotencyKey)
+	resp, err := p.client.makeRequest(ctx, "POST", PayoutsEndpoint, payoutJson, nil, p.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}
@@ -89,9 +90,9 @@ func (p *PayoutHandler) CreatePayout(payout *yoopayout.Payout) (*yoopayout.Payou
 	return &createdPayout, nil
 }
 
-func (p *PayoutHandler) GetPayout(payoutId string) (*yoopayout.Payout, error) {
+func (p *PayoutHandler) GetPayout(ctx context.Context, payoutId string) (*yoopayout.Payout, error) {
 	endpoint := PayoutsEndpoint + "/" + payoutId
-	resp, err := p.client.makeRequest("GET", endpoint, nil, nil, p.idempotencyKey)
+	resp, err := p.client.makeRequest(ctx, "GET", endpoint, nil, nil, p.idempotencyKey)
 	if err != nil {
 		return nil, err
 	}
